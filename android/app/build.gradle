@@ -1,0 +1,68 @@
+plugins {
+    id 'com.android.application'
+}
+
+// El número de versión sube solo en cada compilación de GitHub (Google Play exige que aumente)
+def buildNumber = (System.getenv('GITHUB_RUN_NUMBER') ?: '1').toInteger()
+def keystoreFile = file('release.keystore')
+// Dirección de la web publicada en GitHub Pages (se puede cambiar con la variable WEB_URL del repositorio).
+def webUrl = (System.getenv('WEB_URL') ?: '').trim() ?: 'https://adrianvillarroeldelgado-max.github.io/avd-dt/'
+
+android {
+    namespace 'com.avd.pizarratactica'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId 'com.avd.pizarratactica'
+        minSdk 24
+        targetSdk 36
+        versionCode buildNumber
+        versionName "1.0.${buildNumber}"
+        buildConfigField "String", "WEB_URL", "\"${webUrl}\""
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    signingConfigs {
+        release {
+            if (keystoreFile.exists()) {
+                storeFile keystoreFile
+                storeType 'pkcs12'
+                storePassword System.getenv('KEYSTORE_PASSWORD')
+                keyAlias System.getenv('KEY_ALIAS')
+                keyPassword System.getenv('KEY_PASSWORD')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            // Con la clave de firma (secretos de GitHub) se firma para publicar;
+            // sin ella se usa la clave de pruebas y el APK igualmente se instala.
+            signingConfig keystoreFile.exists() ? signingConfigs.release : signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+
+    androidResources {
+        // Incluir todos los archivos de la app web (algunos empiezan por punto, como .nojekyll)
+        ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:!CVS:!thumbs.db:!picasa.ini:!*~'
+    }
+}
+
+dependencies {
+    implementation 'androidx.webkit:webkit:1.12.1'
+    implementation 'androidx.core:core:1.13.1'
+}

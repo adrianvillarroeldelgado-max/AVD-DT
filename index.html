@@ -1,0 +1,885 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0B1F3A">
+<script>try{var t=localStorage.getItem("avd_theme");document.documentElement.setAttribute("data-theme",t==="claro"||(t!=="oscuro"&&matchMedia("(prefers-color-scheme: light)").matches)?"light":"dark")}catch(e){document.documentElement.setAttribute("data-theme","light")}</script>
+<meta name="description" content="Pizarra táctica de fútbol personal: jugadas animadas, ejercicios y videos.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="D.T Fútbol">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;1,700;1,800&family=Barlow:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="css/style.css">
+<title>Pizarra Táctica · AVD D.T Fútbol</title>
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <button class="brand" id="btnBrand" title="Inicio · AVD D.T Fútbol"><img class="lg" src="icons/logo-dt.png" alt="AVD D.T Fútbol"></button>
+    <button class="tb" id="btnHome" title="Inicio"><span class="ic">🏠</span><span class="lbl">Inicio</span></button>
+    <button class="tb" id="btnProjects" title="Mis tácticas"><span class="ic">☰</span><span class="lbl">Tácticas</span></button>
+    <input id="projName" class="projname" aria-label="Nombre de la táctica" maxlength="80">
+    <button class="tb" id="btnUndo" title="Deshacer (Ctrl+Z)"><span class="ic">↶</span></button>
+    <button class="tb" id="btnRedo" title="Rehacer (Ctrl+Y)"><span class="ic">↷</span></button>
+    <button class="tb" id="btnTask" title="Ficha de tarea"><span class="ic">📝</span><span class="lbl">Ficha</span></button>
+    <button class="tb" id="btnSessions" title="Planificación: semana, plan de temporada, mesociclo y evaluación"><span class="ic">📅</span><span class="lbl">Planificación</span></button>
+    <button class="tb" id="btnSquad" title="Plantel"><span class="ic">👤</span><span class="lbl">Plantel</span></button>
+    <button class="tb" id="btnPerf" title="Partidos, asistencia, carga, bienestar y estadísticas"><span class="ic">📊</span><span class="lbl">Rendimiento</span></button>
+    <button class="tb" id="btnLibrary" title="Ejercicios y videos"><span class="ic">🎬</span><span class="lbl">Biblioteca</span></button>
+    <button class="tb" id="btnTeams" title="Equipos y formaciones"><span class="ic">👕</span><span class="lbl">Equipos</span></button>
+    <button class="tb" id="btnExport" title="Exportar"><span class="ic">⤓</span><span class="lbl">Exportar</span></button>
+    <button class="thb" title="Cambiar tema" aria-label="Cambiar tema"></button>
+    <button class="tb" id="btnSettings" title="Ajustes"><span class="ic">⚙</span></button>
+  </header>
+
+  <nav class="tools" id="tools">
+    <button class="tool active" data-tool="move" title="Mover y seleccionar (arrastra en vacío para seleccionar varios)"><span>✋</span><small>Mover</small></button>
+    <span class="sep"></span>
+    <button class="tool grp" data-panel="objects" title="Jugadores, material y porterías"><span>👥</span><small id="gObjLbl">Objetos ▾</small></button>
+    <button class="tool grp" data-panel="draw" title="Flechas y dibujo"><span id="gDrawIc">➝</span><small id="gDrawLbl">Dibujo ▾</small></button>
+    <button class="tool grp" data-panel="space" title="Delimitar espacios, medir y vistas"><span>⛶</span><small id="gSpaceLbl">Espacio ▾</small></button>
+    <button class="tool" data-tool="text" title="Texto"><span>T</span><small>Texto</small></button>
+    <button class="tool" data-tool="erase" title="Borrar tocando"><span>⌫</span><small>Borrar</small></button>
+    <button class="tool grp" data-panel="edit" title="Editar, seleccionar y limpiar"><span>✂</span><small>Editar ▾</small></button>
+    <span class="sep"></span>
+    <div class="swatches" id="swatches"></div>
+  </nav>
+
+  <main id="stage">
+    <canvas id="board"></canvas>
+    <div id="toolPanel" class="toolpanel" hidden></div>
+    <div id="placeBar" class="zonebar placebar" hidden>
+      <span id="pbName" class="pbname"></span>
+      <div class="stepper"><button id="pbMinus" title="Menos">−</button><input id="pbQty" type="number" min="1" max="40" aria-label="Cantidad"><button id="pbPlus" title="Más">＋</button></div>
+      <div class="seg" id="pbLayout">
+        <button data-lay="line" title="En línea">⋯</button><button data-lay="zig" title="En zigzag">⩘</button><button data-lay="grid" title="En cuadrícula">▦</button><button data-lay="circle" title="En círculo">◌</button>
+      </div>
+      <label class="inline small" id="pbGapLbl">cada <input id="pbGap" type="number" min="0.5" max="30" step="0.5"> m</label>
+      <button id="pbDone">Listo</button>
+    </div>
+    <div id="selPanel" class="selpanel hidden">
+      <span id="selInfo" class="selinfo"></span>
+      <button id="selEdit">Editar</button>
+      <button id="selRotate">Girar</button>
+      <button id="selDup">Duplicar</button>
+      <button id="selColor">Usar color</button>
+      <button id="selLink">Unir</button>
+      <button id="selStyle">Ver como bloque</button>
+      <button id="selSpot">Destacar</button>
+      <button id="selSave">Guardar espacio</button>
+      <button id="selDel" class="danger">Eliminar</button>
+    </div>
+    <div id="zoneBar" class="zonebar" hidden>
+      <div class="seg" id="zbShape">
+        <button data-shape="rect" title="Rectángulo">▭</button><button data-shape="circle" title="Círculo">◯</button><button data-shape="poly" title="Polígono libre">⬠</button>
+      </div>
+      <select id="zbMat" title="Material"></select>
+      <input type="color" id="zbColor" title="Color">
+      <label class="inline small" id="zbSpLbl">cada <input id="zbSpacing" type="number" min="0.5" max="20" step="0.5"> m</label>
+      <button id="zbClose" hidden>Cerrar polígono</button>
+      <button id="zbDone">Listo</button>
+    </div>
+    <div id="densBadge" class="densbadge" hidden></div>
+    <div id="hint" class="hint"></div>
+  </main>
+
+  <footer class="framebar">
+    <button id="btnPlay" class="play" title="Reproducir (espacio)">▶</button>
+    <button id="btnMatchMode" class="fb" title="Modo partido: marcador, cronómetro y notas">⏱<span class="lbl2"> Partido</span></button>
+    <button id="btnPresent" class="fb" title="Modo presentación (pantalla completa)">📽<span class="lbl2"> Presentar</span></button>
+    <div id="frameList" class="framelist"></div>
+    <button id="btnAddFrame" class="fb" title="Nuevo paso (copia el actual)">＋<span class="lbl2"> Paso</span></button>
+    <button id="btnDelFrame" class="fb" title="Eliminar paso">🗑</button>
+    <select id="viewSel" title="Vista del campo"></select>
+    <select id="speedSel" title="Velocidad">
+      <option value="2">Lento</option><option value="1.2">Normal</option><option value="0.7">Rápido</option>
+    </select>
+  </footer>
+</div>
+
+<!-- Inicio -->
+<div id="home" class="home" hidden>
+  <header class="hm-top">
+    <div class="hm-brand"><img class="lg" src="icons/logo-dt.png" alt="AVD D.T Fútbol"><div><h1>Pizarra Táctica</h1><span class="sl">D.T Fútbol · Planificación y entrenamiento</span><span id="hmDate"></span></div></div>
+    <div id="hmTeam" class="hm-team"></div>
+    <label class="hm-cat" title="Equipo o categoría activa: filtra plantel, sesiones, partidos y estadísticas">Equipo <select id="activeCat"></select></label>
+    <button id="hmBoard" class="primary">Ir a la pizarra →</button>
+    <button class="thb" title="Cambiar tema" aria-label="Cambiar tema"></button>
+  </header>
+  <main id="hmGrid" class="hm-grid"></main>
+  <footer class="hm-foot"><label class="chk"><input type="checkbox" id="hmStart"> Abrir la app en Inicio</label><span class="muted small">Tus datos se guardan solo en este dispositivo. <button id="hmBackup" class="hm-link">Copia de seguridad</button> · <button id="hmTour" class="hm-link">Guía de inicio</button></span></footer>
+</div>
+
+<!-- Mis tácticas -->
+<dialog id="dlgProjects" class="dlg wide">
+  <div class="dlg-head"><h2>Mis tácticas</h2><button class="x" data-close>✕</button></div>
+  <div class="dlg-bar">
+    <button id="btnNewProj" class="primary">＋ Nueva</button>
+    <input id="projSearch" type="search" placeholder="Buscar…">
+    <select id="projCat"></select>
+    <select id="projSort"><option value="recent">Recientes</option><option value="name">Nombre</option><option value="cat">Por categoría</option></select>
+    <button id="btnProjSel">Seleccionar</button>
+    <label class="btn">Importar<input type="file" id="projImport" multiple hidden></label>
+  </div>
+  <div id="projBulk" class="bulk" hidden>
+    <strong id="pbCount">0 seleccionadas</strong>
+    <button id="pbAll">Todas</button>
+    <button id="pbCat">Mover a categoría</button>
+    <button id="pbExport">Exportar</button>
+    <button id="pbDup">Duplicar</button>
+    <button id="pbDel" class="danger">Borrar</button>
+  </div>
+  <p class="muted small pad">Importar admite archivos de esta app (.json), proyectos de TacticalPad (experimental), videos e imágenes.</p>
+  <div id="projGrid" class="grid"></div>
+</dialog>
+
+<!-- Biblioteca -->
+<dialog id="dlgLibrary" class="dlg wide">
+  <div class="dlg-head"><h2>Biblioteca</h2><button class="x" data-close>✕</button></div>
+  <div class="tabs">
+    <button class="tab active" data-tab="exlib">Ejercicios por consigna</button>
+    <button class="tab" data-tab="drills">Jugadas animadas</button>
+    <button class="tab" data-tab="videos">Videos e imágenes</button>
+  </div>
+  <section id="tabExlib" class="tabsec">
+    <div id="exPickBar" class="bulk" hidden><strong id="exPickTxt"></strong><button id="exPickCancel" style="margin-left:auto">Cancelar</button></div>
+    <div class="dlg-bar exfilters">
+      <select id="exPhase" aria-label="Parte de la sesión"></select>
+      <select id="exCat" aria-label="Bloque"></select>
+      <select id="exStage" aria-label="Sub-etapa"></select>
+      <select id="exContent" aria-label="Contenido"></select>
+      <select id="exCons" aria-label="Consigna"></select>
+      <select id="exSrc" aria-label="Origen"><option value="">Todos los ejercicios</option><option value="fav">★ Mis favoritos</option><option value="mine">📚 Mis ejercicios</option></select>
+      <input id="exSearch" type="search" placeholder="Buscar ejercicio…">
+      <label class="chk small" title="Solo los contenidos propios de la sub-etapa (sin los de sub-etapas anteriores)"><input type="checkbox" id="exOwn"> Solo contenidos de la sub-etapa</label>
+      <button id="exReset">Limpiar</button>
+      <button id="exPdfAll" title="Descarga en PDF los ejercicios filtrados (máx. 30)">📄 PDF de la selección</button>
+      <span id="exCount" class="muted small"></span>
+    </div>
+    <div id="exTree" class="extree"></div>
+    <div id="exGrid" class="grid"></div>
+  </section>
+  <section id="tabDrills" class="tabsec" hidden>
+    <div class="dlg-bar"><select id="drillCat"></select><span class="muted small">Toca la imagen para ver la animación.</span></div>
+    <div id="drillGrid" class="grid"></div>
+  </section>
+  <section id="tabVideos" class="tabsec" hidden>
+    <div class="dlg-bar">
+      <label class="btn primary">＋ Subir videos<input type="file" id="vidFile" accept="video/*,image/*,.mkv,.avi,.wmv,.flv,.mts,.m2ts,.3gp,.mov" multiple hidden></label>
+      <button id="btnAddLink">＋ Enlace YouTube/Vimeo</button>
+      <button id="btnVidCats">Categorías</button>
+      <input id="vidSearch" type="search" placeholder="Buscar por título, etiqueta o nota…">
+    </div>
+    <div id="vidChips" class="chips"></div>
+    <div id="vidQueue" class="queue"></div>
+    <div id="vidList" class="vlist"></div>
+    <p class="muted small pad" id="vidStorage"></p>
+  </section>
+</dialog>
+
+<!-- Reproductor con dibujo -->
+<dialog id="dlgPlayer" class="dlg full">
+  <div class="dlg-head"><h2 id="playerTitle"></h2><button class="x" data-close>✕</button></div>
+  <div class="pwrap" id="pwrap">
+    <video id="pvideo" controls playsinline></video>
+    <img id="pimg" alt="" hidden>
+    <iframe id="pframe" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen hidden></iframe>
+    <canvas id="pcanvas"></canvas>
+  </div>
+  <div class="dlg-bar">
+    <button id="pBack" class="fileonly">« 1s</button>
+    <button id="pFwd" class="fileonly">1s »</button>
+    <select id="pRate" class="fileonly"><option value="0.25">0.25x</option><option value="0.5">0.5x</option><option value="1" selected>1x</option><option value="1.5">1.5x</option></select>
+    <button id="pPen">✎ Dibujar</button>
+    <button id="pArrow">➝ Flecha</button>
+    <button id="pClear">Limpiar</button>
+    <input type="color" id="pColor" value="#ffeb3b" title="Color">
+    <button id="pSnap" class="fileonly">📷 Captura</button>
+  </div>
+  <div class="dlg-bar plink">
+    <label class="inline">Táctica vinculada <select id="pLink"></select></label>
+    <button id="pOpenTac">Abrir táctica</button>
+  </div>
+  <textarea id="pNotes" placeholder="Notas de este video…"></textarea>
+</dialog>
+
+<!-- Equipos -->
+<dialog id="dlgTeams" class="dlg wide">
+  <div class="dlg-head"><h2>Equipos y formaciones</h2><button class="x" data-close>✕</button></div>
+  <div class="teams" id="teamsWrap"></div>
+</dialog>
+
+<!-- Exportar -->
+<dialog id="dlgExport" class="dlg">
+  <div class="dlg-head"><h2>Exportar</h2><button class="x" data-close>✕</button></div>
+  <div class="stack">
+    <button id="exPdf">📄 PDF de la táctica (todos los pasos y la ficha)</button>
+    <button id="exPng">🖼 Imagen del paso actual (PNG)</button>
+    <button id="exVideo">🎞 Video de la animación</button>
+    <label class="chk"><input type="checkbox" id="exSaveLib" checked> Guardar el video también en «Mis videos»</label>
+    <label class="chk"><input type="checkbox" id="exVoice"> Narrar con mi voz (usa el micrófono; la animación va más lenta)</label>
+    <div id="exProgress" class="progress" hidden><div></div></div>
+    <button id="exJson">💾 Archivo de esta táctica (.json)</button>
+    <button id="exBackup">🗄 Copia de seguridad de todas mis tácticas</button>
+  </div>
+</dialog>
+
+<!-- Ajustes -->
+<dialog id="dlgSettings" class="dlg">
+  <div class="dlg-head"><h2>Ajustes</h2><button class="x" data-close>✕</button></div>
+  <div class="form">
+    <h3>Apariencia</h3>
+    <label>Tema de la app
+      <select id="setTheme"><option value="auto">Automático (según el dispositivo)</option><option value="claro">Claro</option><option value="oscuro">Oscuro</option></select>
+    </label>
+    <h3>Datos y copia de seguridad</h3>
+    <div class="row"><button id="bkOpen">🗄 Copia de seguridad y restauración</button><button id="tourOpen">🧭 Guía de inicio</button></div>
+    <label>Equipo / categoría activa <select id="setActiveCat"></select></label>
+    <h3>Esta táctica</h3>
+    <label>Categoría <input id="setCat" list="catList" maxlength="40"></label>
+    <datalist id="catList"></datalist>
+    <h3>Campo</h3>
+    <label>Tipo y tamaño
+      <select id="setField">
+        <option value="f11">Fútbol 11 · 105 × 68 m</option>
+        <option value="f9">Fútbol 9 · 75 × 50 m</option>
+        <option value="f7">Fútbol 7 · 60 × 40 m</option>
+        <option value="f5">Fútbol sala / 5 · 40 × 20 m</option>
+        <option value="custom">Personalizado</option>
+      </select>
+    </label>
+    <div class="row two">
+      <label>Largo (m) <input id="setL" type="number" min="10" max="130" step="1"></label>
+      <label>Ancho (m) <input id="setW" type="number" min="8" max="100" step="1"></label>
+    </div>
+    <label>Marcas del campo
+      <select id="setMarks"><option value="full">Completas (áreas, círculo, porterías)</option><option value="lines">Solo bandas y medio campo</option><option value="none">Sin marcas (campo libre)</option></select>
+    </label>
+    <label>Vista
+      <select id="setPitch"></select>
+    </label>
+    <label>Lado que se muestra en las vistas parciales
+      <select id="setSide"><option value="R">Portería derecha (ataque)</option><option value="L">Portería izquierda (defensa)</option></select>
+    </label>
+    <h3>Delimitación y divisiones</h3>
+    <div class="row"><button id="btnArea">⛶ Delimitar un espacio</button><button id="btnSpaces2">▦ Espacios guardados</button><button id="btnAreaClear" class="danger">Quitar todos los espacios</button></div>
+    <p class="muted small" id="areaInfo"></p>
+    <label>Divisiones
+      <select id="setGrid">
+        <option value="none">Ninguna</option><option value="thirds">Tercios</option><option value="lanes">Carriles</option>
+        <option value="both">Tercios y carriles</option><option value="custom">Cuadrícula personalizada</option>
+      </select>
+    </label>
+    <div class="row two" id="gridCustom">
+      <label>Columnas <input id="setCols" type="number" min="1" max="12"></label>
+      <label>Filas <input id="setRows" type="number" min="1" max="12"></label>
+    </div>
+    <h3>Videos vinculados</h3>
+    <div id="setVideos" class="small"></div>
+    <label>Notas <textarea id="setNotes" rows="3"></textarea></label>
+    <h3>Pizarra</h3>
+    <label>Orientación
+      <select id="setOrient"><option value="auto">Automática</option><option value="horizontal">Horizontal</option><option value="vertical">Vertical</option></select>
+    </label>
+    <label>Estilo
+      <select id="setTheme"><option value="cesped">Césped</option><option value="oscuro">Césped oscuro</option><option value="pizarra">Pizarra blanca</option></select>
+    </label>
+    <label>Tamaño de las fichas <input type="range" id="setSize" min="0.6" max="1.6" step="0.05"></label>
+    <label class="chk"><input type="checkbox" id="setNums"> Mostrar números</label>
+    <label class="chk"><input type="checkbox" id="setNames"> Mostrar nombres</label>
+    <label class="chk"><input type="checkbox" id="setOnion"> Ver posición del paso anterior</label>
+    <label class="chk"><input type="checkbox" id="setLoop"> Repetir la animación</label>
+    <h3>Videos</h3>
+    <label>Al subir un video, guardarlo como
+      <select id="setVidQ">
+        <option value="720">MP4 720p (recomendado)</option><option value="480">MP4 480p (ocupa menos)</option>
+        <option value="1080">MP4 1080p</option><option value="original">Original, sin convertir si ya se reproduce</option>
+      </select>
+    </label>
+    <h3>Privacidad</h3>
+    <button id="btnPin">Establecer PIN de acceso</button>
+    <p class="muted small">Tus tácticas y videos se guardan solo en este dispositivo. Usa «Exportar → Copia de seguridad» para pasarlos a otro.</p>
+  </div>
+</dialog>
+
+<!-- Editar jugador -->
+<dialog id="dlgEdit" class="dlg small">
+  <div class="dlg-head"><h2>Jugador</h2><button class="x" data-close>✕</button></div>
+  <div class="form">
+    <label>Número <input id="edNum" inputmode="numeric" maxlength="3"></label>
+    <label>Nombre <input id="edName" maxlength="24"></label>
+    <label>Equipo <select id="edTeam"><option value="A">A</option><option value="B">B</option><option value="C">C</option></select></label>
+    <label id="edPidRow">Jugador del plantel <select id="edPid"></select></label>
+    <label class="chk"><input type="checkbox" id="edGk"> Portero</label>
+    <div class="row end"><button data-close>Cancelar</button><button id="edOk" class="primary">Aceptar</button></div>
+  </div>
+</dialog>
+
+<!-- Texto -->
+<dialog id="dlgText" class="dlg small">
+  <div class="dlg-head"><h2>Texto</h2><button class="x" data-close>✕</button></div>
+  <div class="form">
+    <label>Texto <textarea id="txText" rows="3" maxlength="300"></textarea></label>
+    <label>Tamaño
+      <select id="txSize"><option value="0.75">Pequeño</option><option value="1">Normal</option><option value="1.5">Grande</option><option value="2.2">Muy grande</option></select>
+    </label>
+    <label class="chk"><input type="checkbox" id="txBox"> Con fondo</label>
+    <p class="muted small">Usa el color elegido en la barra de herramientas.</p>
+    <div class="row end"><button data-close>Cancelar</button><button id="txOk" class="primary">Aceptar</button></div>
+  </div>
+</dialog>
+
+<!-- Espacios de juego -->
+<dialog id="dlgSpaces" class="dlg wide">
+  <div class="dlg-head"><h2>Espacios de juego</h2><button class="x" data-close>✕</button></div>
+  <div class="dlg-bar">
+    <button id="btnSaveSpace" class="primary">Guardar el espacio actual</button>
+    <label class="chk"><input type="checkbox" id="spReplace"> Reemplazar los espacios actuales</label>
+  </div>
+  <h3 class="sechead">Mis espacios</h3>
+  <div id="mySpaces" class="grid"></div>
+  <h3 class="sechead">Predefinidos</h3>
+  <div id="presetSpaces" class="grid"></div>
+</dialog>
+
+<!-- Editar espacio -->
+<dialog id="dlgZone" class="dlg small">
+  <div class="dlg-head"><h2>Espacio de juego</h2><button class="x" data-close>✕</button></div>
+  <div class="form">
+    <label>Nombre <input id="zName" maxlength="40" placeholder="Ej.: Rondo, zona de comodines…"></label>
+    <p class="muted small" id="zInfo"></p>
+    <label>Delimitado con <select id="zMat"></select></label>
+    <div class="row two">
+      <label>Color <input type="color" id="zColor"></label>
+      <label>Separación (m) <input id="zSpacing" type="number" min="0.5" max="20" step="0.5"></label>
+    </div>
+    <div class="row two" id="zSizeRow">
+      <label>Largo (m) <input id="zW" type="number" min="1" max="130" step="0.5"></label>
+      <label>Ancho (m) <input id="zH" type="number" min="1" max="100" step="0.5"></label>
+    </div>
+    <label class="chk"><input type="checkbox" id="zDims"> Mostrar medidas</label>
+    <label class="chk"><input type="checkbox" id="zDim"> Oscurecer fuera del espacio</label>
+    <label class="chk"><input type="checkbox" id="zMain"> Espacio principal (vista «Espacio» y divisiones)</label>
+    <div class="row end"><button id="zSave">Guardar en Mis espacios</button><button id="zOk" class="primary">Aceptar</button></div>
+  </div>
+</dialog>
+
+<!-- Categorías de videos -->
+<dialog id="dlgCats" class="dlg small">
+  <div class="dlg-head"><h2>Categorías de videos</h2><button class="x" data-close>✕</button></div>
+  <div class="form">
+    <div class="row"><input id="newCat" placeholder="Nueva categoría" maxlength="40"><button id="btnNewCat" class="primary">Añadir</button></div>
+    <div id="catRows" class="catrows"></div>
+  </div>
+</dialog>
+<datalist id="vidCatList"></datalist>
+
+<!-- Ficha de tarea -->
+<dialog id="dlgTask" class="dlg wide">
+  <div class="dlg-head"><h2>Ficha de tarea</h2><button class="x" data-close>✕</button></div>
+  <div class="taskwrap">
+    <div class="taskleft">
+      <canvas id="taskThumb"></canvas>
+      <div id="taskStats" class="stats"></div>
+      <div class="steps9" id="taskSteps"></div>
+      <p class="muted small">La densidad se calcula con los jugadores que están dentro del espacio principal en el primer paso. La pizarra es la representación gráfica (paso 9).</p>
+    </div>
+    <div class="form taskform">
+      <label>Nombre de la tarea <input id="tkName" maxlength="80"></label>
+      <div class="row two">
+        <label>Fase de la sesión <select id="tkPhase"></select></label>
+        <label>Sub-etapa <select id="tkStage"></select></label>
+      </div>
+      <section class="step"><h4><b>1</b> Contenido y consigna</h4>
+        <div class="row two">
+          <label>Tipo de contenido <select id="tkCat"></select></label>
+          <label>Contenido <select id="tkContent"></select></label>
+        </div>
+        <p id="tkContentDef" class="muted small"></p>
+        <label>Elegir consigna del catálogo <select id="tkConsSel"></select></label>
+        <label>Consigna <textarea id="tkConsigna" rows="2" placeholder="Elige una del catálogo o escríbela"></textarea></label>
+        <label>Objetivo táctico / técnico <input id="tkObj" maxlength="160"></label>
+      </section>
+      <section class="step"><h4><b>2</b> Estrategia didáctica</h4>
+        <div class="row two">
+          <label>Estrategia <select id="tkStrategy"></select></label>
+          <label>Estilo de enseñanza <select id="tkStyle"></select></label>
+        </div>
+        <p id="tkStratHint" class="hintline"></p>
+      </section>
+      <section class="step"><h4><b>3</b> Participantes</h4>
+        <p id="tkAutoPlayers" class="autoline"></p>
+        <label>Número de jugadores / equipos <input id="tkPlayers" maxlength="80" placeholder="Ej.: 4 vs 4 + 2 comodines, con porteros"></label>
+      </section>
+      <section class="step"><h4><b>4</b> Espacio</h4>
+        <p id="tkAutoSpace" class="autoline"></p>
+        <label>Forma del espacio y sub-espacios <input id="tkSpaceNote" maxlength="160" placeholder="Ej.: más largo que ancho; zona de finalización de 10 m"></label>
+      </section>
+      <section class="step"><h4><b>5</b> Puntuación</h4>
+        <div class="row two">
+          <label>Forma de finalizar <select id="tkScoreType"></select></label>
+          <label>Puntuación <input id="tkScoring" maxlength="160" placeholder="Ej.: 1 punto por llegar a la zona"></label>
+        </div>
+        <p id="tkScoreWarn" class="warnline" hidden></p>
+      </section>
+      <section class="step"><h4><b>6</b> Normas y descripción</h4>
+        <label>Normativas <textarea id="tkRules" rows="2" placeholder="Ej.: marcaje individual en todo el campo"></textarea></label>
+        <label>Descripción <textarea id="tkDesc" rows="2"></textarea></label>
+      </section>
+      <section class="step"><h4><b>7</b> Gradiente</h4>
+        <div class="row two">
+          <label>Para facilitar (bajar) <input id="tkGradDown" maxlength="160" placeholder="Ej.: + 1 comodín, espacio más grande"></label>
+          <label>Para dificultar (subir) <input id="tkGradUp" maxlength="160" placeholder="Ej.: máximo 2 toques, espacio más pequeño"></label>
+        </div>
+      </section>
+      <section class="step"><h4><b>8</b> Preguntas y feedback</h4>
+        <label>Preguntas preparadas <textarea id="tkFeedback" rows="2" placeholder="Ej.: ¿Qué puedes hacer con el cuerpo para engañar al rival?"></textarea></label>
+      </section>
+      <section class="step"><h4>Tiempo y carga</h4>
+        <div class="row four">
+          <label>Duración (min) <input id="tkDur" type="number" min="1" max="180"></label>
+          <label>Series <input id="tkSeries" type="number" min="1" max="30"></label>
+          <label>Trabajo <input id="tkWork" maxlength="20" placeholder="4 min"></label>
+          <label>Descanso <input id="tkRest" maxlength="20" placeholder="1 min"></label>
+        </div>
+        <div class="row two">
+          <label>Intensidad prevista <select id="tkInt"><option value="baja">Baja (RPE 3)</option><option value="media">Media (RPE 5)</option><option value="alta">Alta (RPE 7)</option><option value="maxima">Máxima (RPE 9)</option></select></label>
+          <label>Objetivo físico <input id="tkPhys" list="physList" maxlength="80"></label>
+        </div>
+        <datalist id="physList"><option value="Activación"><option value="Resistencia aeróbica"><option value="Potencia aeróbica"><option value="Resistencia a la velocidad (RSA)"><option value="Fuerza específica"><option value="Velocidad"><option value="Recuperación"></datalist>
+        <p id="tkLoad" class="autoline"></p>
+        <label>Variantes y progresiones <textarea id="tkVar" rows="2"></textarea></label>
+      </section>
+    </div>
+  </div>
+  <div class="dlg-bar endbar">
+    <button id="tkPresent">📽 Presentar</button>
+    <button id="tkLib" title="Guardar esta tarea como plantilla en tu biblioteca de ejercicios">📚 A mi biblioteca</button>
+    <button id="tkPrint">📄 PDF / Imprimir</button>
+    <button id="tkToSession" class="primary">＋ Añadir a una sesión</button>
+  </div>
+</dialog>
+
+<!-- Planificación -->
+<dialog id="dlgSessions" class="dlg wide">
+  <div class="dlg-head"><h2>Planificación</h2><button class="x" data-close>✕</button></div>
+  <div class="tabs" id="planTabs">
+    <button class="tab active" data-pt="week">Semana</button>
+    <button class="tab" data-pt="plan">Plan de temporada</button>
+    <button class="tab" data-pt="meso">Mesociclo</button>
+    <button class="tab" data-pt="eval">Evaluación</button>
+    <button class="tab" data-pt="guide">Guía</button>
+  </div>
+  <section id="ptWeek" class="tabsec">
+    <div class="dlg-bar">
+      <button id="wkPrev" title="Semana anterior">◀</button><strong id="wkLbl" class="wklbl"></strong><button id="wkNext" title="Semana siguiente">▶</button><button id="wkToday">Hoy</button><button id="wkPdf" title="Microciclo de la semana en PDF">📄 PDF</button><button id="wkIcs" title="Exportar la semana al calendario (.ics)">📆 Calendario</button><button id="wkMD" title="Calcular el día MD de cada sesión según los partidos">⚽ MD según partidos</button>
+      <span id="wkTotal" class="muted small"></span>
+      <button id="btnNewSession" class="primary" style="margin-left:auto">＋ Nueva sesión</button>
+    </div>
+    <div class="scrollarea">
+      <div id="weekGrid" class="week"></div>
+      <div class="dlg-bar"><h3 class="sechead" style="margin:0">Todas las sesiones</h3><input id="sesSearch" type="search" placeholder="Buscar…"></div>
+      <div id="sesList" class="vlist"></div>
+    </div>
+  </section>
+  <section id="ptPlan" class="tabsec" hidden>
+    <div class="dlg-bar">
+      <select id="planSel"></select>
+      <button id="planNew" class="primary">＋ Nuevo plan</button>
+      <button id="planEdit">⚙ Datos del plan</button>
+      <button id="planPrint">📄 PDF</button>
+      <button id="planDel" class="danger">Borrar</button>
+    </div>
+    <div class="scrollarea">
+      <p id="planInfo" class="pad muted small"></p>
+      <div class="tablewrap"><table id="planGrid" class="ptable"></table></div>
+      <div id="planCheck" class="checks"></div>
+    </div>
+  </section>
+  <section id="ptMeso" class="tabsec" hidden>
+    <div class="dlg-bar">
+      <label class="inline">Mes <select id="mesoMonth"></select></label>
+      <button id="mesoAuto">✨ Autocompletar progresión</button>
+      <button id="mesoPrint">📄 PDF</button>
+      <span class="muted small">Las consignas de cada semana deben guardar relación entre sí y progresar.</span>
+    </div>
+    <div class="scrollarea"><div class="tablewrap"><table id="mesoGrid" class="ptable meso"></table></div></div>
+  </section>
+  <section id="ptEval" class="tabsec" hidden>
+    <div class="scrollarea">
+      <div class="dlg-bar"><h3 class="sechead" style="margin:0">Test ludológico de equipo</h3><button id="evNewTeam" class="primary">＋ Nuevo test de equipo</button><button id="evPdf">📄 PDF de evaluaciones</button></div>
+      <div id="evTeamList" class="vlist"></div>
+      <div class="dlg-bar"><h3 class="sechead" style="margin:0">Test ludológico individual</h3><select id="evCat"></select></div>
+      <div class="tablewrap"><table id="evPlayers" class="ptable"></table></div>
+    </div>
+  </section>
+  <section id="ptGuide" class="tabsec" hidden>
+    <div class="scrollarea guide" id="guideBody"></div>
+  </section>
+</dialog>
+
+<dialog id="dlgSession" class="dlg wide">
+  <div class="dlg-head"><h2>Sesión</h2><button class="x" data-close>✕</button></div>
+  <div class="scrollarea">
+    <div class="form">
+      <div class="row sesrow">
+        <label class="grow">Nombre <input id="sesName" maxlength="80"></label>
+        <label>Fecha <input id="sesDate" type="date"></label>
+        <label>Día del microciclo <select id="sesMD"></select></label>
+        <label>Sub-etapa <select id="sesStage"></select></label>
+        <label>Equipo / categoría <input id="sesCat" list="sesCatList" maxlength="40"></label>
+      </div>
+      <datalist id="sesCatList"></datalist>
+      <p class="muted small" id="sesMDInfo"></p>
+      <p class="autoline" id="sesPlanInfo" hidden></p>
+      <label>Objetivo de la sesión <input id="sesObj" maxlength="200"></label>
+      <div id="sesSummary" class="stats"></div>
+      <div id="sesBlocks" class="sblocks"></div>
+      <div id="sesAtt" class="sblock"></div>
+      <label>Notas <textarea id="sesNotes" rows="2"></textarea></label>
+    </div>
+  </div>
+  <div class="dlg-bar endbar">
+    <button id="sesDel" class="danger">Borrar</button>
+    <button id="sesDup">Duplicar</button>
+    <button id="sesShare" title="Archivo con la sesión y sus tareas para un compañero">⇪ Compartir</button>
+    <button id="sesIcs" title="Añadir al calendario">📆 Calendario</button>
+    <button id="sesPrint">📄 PDF / Imprimir</button>
+    <button id="sesPresent" class="primary">📽 Presentar sesión</button>
+  </div>
+</dialog>
+
+<dialog id="dlgPlanSet" class="dlg">
+  <div class="dlg-head"><h2>Datos del plan</h2><button class="x" data-close>✕</button></div>
+  <div class="form">
+    <label>Nombre <input id="psName" maxlength="80"></label>
+    <div class="row two">
+      <label>Equipo / categoría <input id="psCat" list="sesCatList" maxlength="40"></label>
+      <label>Sub-etapa del equipo <select id="psStage"></select></label>
+    </div>
+    <div class="row two">
+      <label>Mes de inicio <input id="psStart" type="month"></label>
+      <label>Duración (meses) <input id="psMonths" type="number" min="1" max="12"></label>
+    </div>
+    <h3>Días de entrenamiento por semana</h3>
+    <div id="psDays" class="psdays"></div>
+    <div class="row"><button id="psAddDay">＋ Día</button><button id="psDelDay">− Día</button></div>
+    <h3>Contenido asignado</h3>
+    <div class="row two">
+      <label>Contenido <select id="psContent"></select></label>
+      <label>Consigna <select id="psConsigna"></select></label>
+    </div>
+    <p class="muted small">El contenido asignado debe aparecer en algún mes de la programación.</p>
+    <div class="row end"><button data-close>Cancelar</button><button id="psOk" class="primary">Guardar</button></div>
+  </div>
+</dialog>
+
+<dialog id="dlgTeamTest" class="dlg wide">
+  <div class="dlg-head"><h2>Test ludológico de equipo</h2><button class="x" data-close>✕</button></div>
+  <div class="scrollarea">
+    <div class="form">
+      <div class="row sesrow">
+        <label>Fecha <input id="ttDate" type="date"></label>
+        <label class="grow">Equipo / categoría <input id="ttCat" list="sesCatList" maxlength="40"></label>
+      </div>
+      <p class="muted small">Observa 10 situaciones de cada fase y marca en cada una la sub-etapa que mejor describe al equipo.</p>
+      <div id="ttBody"></div>
+      <div id="ttResult" class="ttresult"></div>
+      <label>Notas <textarea id="ttNotes" rows="2"></textarea></label>
+    </div>
+  </div>
+  <div class="dlg-bar endbar"><button id="ttDel" class="danger">Borrar</button><button id="ttApply">Aplicar al plan actual</button><button id="ttOk" class="primary">Guardar</button></div>
+</dialog>
+
+<dialog id="dlgPlayerTest" class="dlg wide">
+  <div class="dlg-head"><h2 id="ptTitle">Test ludológico individual</h2><button class="x" data-close>✕</button></div>
+  <div class="scrollarea">
+    <div class="form">
+      <label style="max-width:200px">Fecha <input id="ptDate" type="date"></label>
+      <p class="muted small">Elige en cada rol la descripción que mejor encaja con lo que observas.</p>
+      <div id="ptBody" class="ptbody"></div>
+      <div class="row two">
+        <label>Resultado sugerido <input id="ptSuggest" disabled></label>
+        <label>Nivel de comprensión del juego (final) <select id="ptFinal"></select></label>
+      </div>
+      <label>Notas <textarea id="ptNotes" rows="2"></textarea></label>
+    </div>
+  </div>
+  <div class="dlg-bar endbar"><button data-close>Cancelar</button><button id="ptOk" class="primary">Guardar</button></div>
+</dialog>
+
+<!-- Selector -->
+<dialog id="dlgPick" class="dlg">
+  <div class="dlg-head"><h2 id="pickTitle"></h2><button class="x" data-close>✕</button></div>
+  <div class="dlg-bar"><input id="pickSearch" type="search" placeholder="Buscar…" style="flex:1"></div>
+  <div id="pickList" class="picklist"></div>
+</dialog>
+
+<!-- Plantel -->
+<dialog id="dlgSquad" class="dlg wide">
+  <div class="dlg-head"><h2>Plantel</h2><button class="x" data-close>✕</button></div>
+  <div class="dlg-bar">
+    <button id="btnAddPlayer" class="primary">＋ Jugador</button>
+    <input id="sqSearch" type="search" placeholder="Buscar…">
+    <select id="sqCat"></select>
+    <select id="sqStatus"></select>
+    <button id="sqPdf">📄 PDF</button>
+    <label class="btn" title="Archivo CSV o TXT: dorsal;nombre;posición;categoría">Importar lista<input type="file" id="sqImport" accept=".csv,.txt,text/csv,text/plain" hidden></label>
+  </div>
+  <div id="sqSummary" class="chips"></div>
+  <div id="sqList" class="sqgrid"></div>
+</dialog>
+
+<dialog id="dlgSqPlayer" class="dlg">
+  <div class="dlg-head"><h2>Jugador</h2><button class="x" data-close>✕</button></div>
+  <div class="form">
+    <div class="row">
+      <div id="spPhotoPrev" class="sqph big"></div>
+      <label class="btn">Foto<input type="file" id="spPhoto" accept="image/*" hidden></label>
+      <button id="spPhotoDel" class="danger">Quitar foto</button>
+    </div>
+    <label>Nombre completo <input id="spName" maxlength="60"></label>
+    <div class="row two">
+      <label>Nombre en la pizarra <input id="spShort" maxlength="18" placeholder="Apellido o apodo"></label>
+      <label>Dorsal <input id="spDorsal" inputmode="numeric" maxlength="3"></label>
+    </div>
+    <div class="row two">
+      <label>Posición <select id="spPos"></select></label>
+      <label>Posición secundaria <select id="spPos2"></select></label>
+    </div>
+    <div class="row two">
+      <label>Pie <select id="spFoot"><option value="">—</option><option value="D">Derecho</option><option value="I">Izquierdo</option><option value="A">Ambos</option></select></label>
+      <label>Equipo / categoría <input id="spCat" list="spCatList" maxlength="40"></label>
+    </div>
+    <datalist id="spCatList"></datalist>
+    <div class="row four">
+      <label>Nacimiento <input id="spBirth" type="date"></label>
+      <label>Altura (cm) <input id="spHeight" type="number" min="100" max="230"></label>
+      <label>Peso (kg) <input id="spWeight" type="number" min="30" max="150"></label>
+      <label>Estado <select id="spStatus"></select></label>
+    </div>
+    <div class="row two" id="spStatusRow">
+      <label>Detalle <input id="spNote" maxlength="80" placeholder="Ej.: Sobrecarga isquiotibial"></label>
+      <label>Vuelta prevista <input id="spBack" type="date"></label>
+    </div>
+    <label>Notas <textarea id="spNotes" rows="2"></textarea></label>
+    <div id="spExtra" class="spextra"></div>
+    <div class="row end"><button id="spTest">🧠 Test ludológico</button><button id="spDel" class="danger">Borrar</button><button data-close>Cancelar</button><button id="spSave" class="primary">Guardar</button></div>
+  </div>
+</dialog>
+
+<dialog id="dlgSqPick" class="dlg">
+  <div class="dlg-head"><h2>Alinear: <span id="spkTeam"></span></h2><button class="x" data-close>✕</button></div>
+  <div class="dlg-bar">
+    <select id="spkForm"></select>
+    <select id="spkCat"></select>
+    <button id="spkAuto">Elegir disponibles</button>
+    <span id="spkCount" class="muted small"></span>
+  </div>
+  <div id="spkList" class="picklist"></div>
+  <div class="dlg-bar endbar"><button data-close>Cancelar</button><button id="spkOk" class="primary">Colocar en la pizarra</button></div>
+</dialog>
+
+<!-- Preguntas -->
+<!-- Rendimiento -->
+<dialog id="dlgPerf" class="dlg wide">
+  <div class="dlg-head"><h2>Rendimiento</h2><button class="x" data-close>✕</button></div>
+  <div class="tabs" id="perfTabs">
+    <button class="tab active" data-pf="matches">Partidos</button>
+    <button class="tab" data-pf="att">Asistencia</button>
+    <button class="tab" data-pf="load">Carga</button>
+    <button class="tab" data-pf="well">Bienestar</button>
+    <button class="tab" data-pf="season">Temporada</button>
+  </div>
+  <section id="pfMatches" class="tabsec">
+    <div class="dlg-bar"><button id="mtNew" class="primary">＋ Partido</button><select id="mtFilter"><option value="">Todos</option><option value="next">Próximos</option><option value="played">Jugados</option></select><span id="mtSummary" class="muted small"></span><button id="mtIcs" style="margin-left:auto">📆 Calendario</button><button id="mtPdf">📄 PDF</button></div>
+    <div id="mtList" class="vlist"></div>
+  </section>
+  <section id="pfAtt" class="tabsec" hidden>
+    <div class="dlg-bar"><label class="inline small">Desde <input id="atFrom" type="date"></label><label class="inline small">Hasta <input id="atTo" type="date"></label><span class="muted small">Se registra en cada sesión (sección «Asistencia y RPE»).</span><button id="atPdf" style="margin-left:auto">📄 PDF</button></div>
+    <div class="scrollarea"><div class="tablewrap"><table id="atTable" class="ptable"></table></div></div>
+  </section>
+  <section id="pfLoad" class="tabsec" hidden>
+    <div class="dlg-bar"><span class="muted small">Carga real = RPE (0-10) × minutos de cada jugador en sesiones y partidos. ACWR = carga de los últimos 7 días ÷ media semanal de los últimos 28.</span><button id="ldPdf" style="margin-left:auto">📄 PDF</button></div>
+    <div class="scrollarea"><div id="ldChart" class="chartbox"></div><div class="tablewrap"><table id="ldTable" class="ptable"></table></div></div>
+  </section>
+  <section id="pfWell" class="tabsec" hidden>
+    <div class="dlg-bar"><label class="inline small">Día <input id="wlDate" type="date"></label><span class="muted small">1 = muy mal · 5 = muy bien. Un total ≤ 12 o un ítem en 1 genera alerta.</span><button id="wlPdf" style="margin-left:auto">📄 PDF</button></div>
+    <div class="scrollarea"><div class="tablewrap"><table id="wlTable" class="ptable"></table></div></div>
+  </section>
+  <section id="pfSeason" class="tabsec" hidden>
+    <div class="dlg-bar"><label class="inline small">Desde <input id="snFrom" type="date"></label><label class="inline small">Hasta <input id="snTo" type="date"></label><button id="snPdf" style="margin-left:auto">📄 PDF</button></div>
+    <div id="snBody" class="scrollarea snbody"></div>
+  </section>
+</dialog>
+
+<dialog id="dlgMatch" class="dlg wide">
+  <div class="dlg-head"><h2 id="mtTitle">Partido</h2><button class="x" data-close>✕</button></div>
+  <div class="tabs" id="mtTabs">
+    <button class="tab active" data-mt="data">Datos</button>
+    <button class="tab" data-mt="call">Convocatoria y alineación</button>
+    <button class="tab" data-mt="stats">Minutos y estadísticas</button>
+    <button class="tab" data-mt="rival">Informe del rival</button>
+  </div>
+  <div class="scrollarea">
+    <section id="mtData" class="form">
+      <div class="row sesrow">
+        <label class="grow">Rival <input id="mtRival" maxlength="60"></label>
+        <label>Fecha <input id="mtDate" type="date"></label>
+        <label>Hora <input id="mtTime" type="time"></label>
+        <label>Condición <select id="mtVenue"><option value="local">Local</option><option value="visitante">Visitante</option><option value="neutral">Neutral</option></select></label>
+      </div>
+      <div class="row sesrow">
+        <label class="grow">Competición <input id="mtComp" maxlength="60" placeholder="Liga, copa, amistoso…"></label>
+        <label>Equipo / categoría <input id="mtCat" list="sesCatList" maxlength="40"></label>
+        <label>Lugar <input id="mtPlace" maxlength="60"></label>
+      </div>
+      <div class="row sesrow">
+        <label>Goles a favor <input id="mtGF" type="number" min="0" max="99"></label>
+        <label>Goles en contra <input id="mtGA" type="number" min="0" max="99"></label>
+        <label>Duración (min) <input id="mtDur" type="number" min="20" max="130"></label>
+        <label>RPE del equipo <input id="mtRPE" type="number" min="0" max="10" step="1" placeholder="0-10"></label>
+      </div>
+      <label>Notas del partido <textarea id="mtNotes" rows="4"></textarea></label>
+    </section>
+    <section id="mtCall" class="form" hidden>
+      <div class="row"><label class="inline">Formación <select id="mtForm"></select></label><button id="mtAuto">Convocar disponibles</button><span id="mtCallCount" class="muted small"></span><button id="mtBoard" class="primary" style="margin-left:auto">🟩 Alineación en la pizarra</button></div>
+      <div class="tablewrap" style="padding:0"><table id="mtCallTable" class="ptable"></table></div>
+    </section>
+    <section id="mtStats" class="form" hidden>
+      <p class="muted small">Minutos, goles, asistencias, tarjetas y RPE individual (si no lo indicas se usa el del equipo). Se usan para la carga y las estadísticas.</p>
+      <div class="tablewrap" style="padding:0"><table id="mtStatsTable" class="ptable"></table></div>
+    </section>
+    <section id="mtRivalSec" class="form" hidden>
+      <div class="row two"><label>Sistema habitual <input id="rvSystem" maxlength="40" placeholder="1-4-4-2"></label><label>Entrenador / estilo <input id="rvStyle" maxlength="80"></label></div>
+      <label>Fortalezas <textarea id="rvStrong" rows="3"></textarea></label>
+      <label>Debilidades <textarea id="rvWeak" rows="3"></textarea></label>
+      <label>Acciones a balón parado <textarea id="rvABP" rows="3"></textarea></label>
+      <label>Jugadores clave <textarea id="rvKey" rows="2"></textarea></label>
+      <label>Plan de partido <textarea id="rvPlan" rows="3"></textarea></label>
+      <div class="row"><button id="rvBoard">🟩 Pizarra del rival</button><span id="rvBoardInfo" class="muted small"></span></div>
+    </section>
+  </div>
+  <div class="dlg-bar endbar"><button id="mtDel" class="danger">Borrar</button><button id="mtPdfOne">📄 PDF</button><button id="mtOk" class="primary">Guardar</button></div>
+</dialog>
+
+<dialog id="dlgBackup" class="dlg">
+  <div class="dlg-head"><h2>Copia de seguridad</h2><button class="x" data-close>✕</button></div>
+  <div class="form">
+    <p id="bkInfo" class="muted small"></p>
+    <label class="chk"><input type="checkbox" id="bkVideos"> Incluir videos e imágenes (el archivo puede ser muy grande)</label>
+    <button id="bkSave" class="primary">⤓ Descargar copia completa</button>
+    <h3>Restaurar</h3>
+    <p class="muted small">Elige un archivo de copia. «Combinar» añade y actualiza sin borrar lo que ya tienes; «Reemplazar» deja el dispositivo exactamente como la copia.</p>
+    <div class="row"><label class="btn">Elegir archivo…<input type="file" id="bkFile" accept=".json,application/json" hidden></label>
+      <select id="bkMode"><option value="merge">Combinar</option><option value="replace">Reemplazar todo</option></select></div>
+    <h3>Recordatorio</h3>
+    <label>Avisarme si no hago copia en <select id="bkEvery"><option value="7">7 días</option><option value="14">14 días</option><option value="30">30 días</option><option value="0">Nunca</option></select></label>
+    <p id="bkPersist" class="muted small"></p>
+  </div>
+</dialog>
+
+<div id="tour" class="tour" hidden>
+  <div class="tourbox">
+    <img class="lg" src="icons/logo-dt.png" alt="AVD D.T Fútbol">
+    <div id="tourBody"></div>
+    <div class="tourdots" id="tourDots"></div>
+    <div class="row end"><button id="tourSkip">Saltar</button><button id="tourPrev">Anterior</button><button id="tourNext" class="primary">Siguiente</button></div>
+  </div>
+</div>
+
+<div id="matchMode" class="matchmode" hidden>
+  <div class="mm-top">
+    <div class="mm-score"><button data-sc="A-">−</button><div><small id="mmA">Mi equipo</small><b id="mmGA">0</b></div><span>:</span><div><small id="mmB">Rival</small><b id="mmGB">0</b></div><button data-sc="B-">−</button></div>
+    <div class="mm-btns"><button data-sc="A+">⚽ Gol nuestro</button><button data-sc="B+">⚽ Gol rival</button></div>
+  </div>
+  <div class="mm-clock"><b id="mmTime">00:00</b><span id="mmHalf">1.ª parte</span>
+    <button id="mmPlay" class="primary">▶</button><button id="mmHalfBtn">2.ª parte</button><button id="mmReset">↺</button></div>
+  <div class="mm-notes"><textarea id="mmNotes" rows="3" placeholder="Notas rápidas del partido o del descanso…"></textarea>
+    <div class="row"><button id="mmStamp">＋ Minuto</button><select id="mmMatch"></select><button id="mmSave">Guardar en el partido</button><button id="mmClose">Cerrar</button></div></div>
+</div>
+
+<dialog id="dlgAsk" class="dlg small">
+  <div class="dlg-head"><h2 id="askTitle"></h2></div>
+  <form id="askForm" class="form">
+    <div id="askFields" class="form" style="padding:0"></div>
+    <div class="row end"><button type="button" id="askCancel">Cancelar</button><button type="submit" id="askOk" class="primary">Aceptar</button></div>
+  </form>
+</dialog>
+
+<div id="lock" class="lock" hidden>
+  <div class="lockbox">
+    <img class="lg lockl" src="icons/logo-dt.png" alt="AVD D.T Fútbol">
+    <h2>Pizarra Táctica</h2>
+    <input id="lockPin" type="password" inputmode="numeric" placeholder="PIN" autocomplete="off">
+    <button id="lockOk" class="primary">Entrar</button>
+    <p id="lockErr" class="err"></p>
+  </div>
+</div>
+<div id="toast" class="toast"></div>
+<div id="present" class="present" hidden>
+  <div class="pr-top">
+    <div class="pr-title"><b id="prTitle"></b><span id="prSub"></span></div>
+    <button id="prInfo" title="Consignas (I)">ℹ Consignas</button>
+    <button id="prExit" title="Salir (Esc)">✕ Salir</button>
+  </div>
+  <div id="prNotes" class="pr-notes" hidden></div>
+  <div class="pr-bot">
+    <button id="prPrevTask" title="Tarea anterior">⏮</button>
+    <button id="prPrev" title="Paso anterior (←)">◀</button>
+    <button id="prPlay" class="play" title="Reproducir (espacio)">▶</button>
+    <button id="prNext" title="Paso siguiente (→)">▶▶</button>
+    <button id="prNextTask" title="Tarea siguiente">⏭</button>
+    <span id="prStep" class="pr-step"></span>
+    <button id="prTimer" title="Cronómetro de la tarea (T)">⏱</button>
+  </div>
+  <div id="prClock" class="pr-clock" hidden>
+    <div class="pc-time"><b id="pcTime">0:00</b><span id="pcTotal"></span></div>
+    <div class="pc-bar"><i id="pcFill"></i><span class="pc-mark" style="left:15%"></span><span class="pc-mark" style="left:60%"></span><span class="pc-mark" style="left:90%"></span></div>
+    <div id="pcCue" class="pc-cue"></div>
+    <div class="pc-btns"><button id="pcStart">▶ Iniciar</button><button id="pcReset">↺</button></div>
+  </div>
+</div>
+<dialog id="dlgExView" class="dlg wide">
+  <div class="dlg-head"><h2 id="exvTitle">Ejercicio</h2><button class="x" data-close>✕</button></div>
+  <div id="exvBody" class="scrollarea paperwrap"></div>
+  <div class="dlg-bar endbar"><button id="exvPdf">📄 PDF</button><button id="exvAdd">＋ Añadir a una sesión</button><button id="exvUse" class="primary">Usar en la pizarra</button></div>
+</dialog>
+
+<dialog id="dlgPdf" class="dlg wide">
+  <div class="dlg-head"><h2 id="pdfTitle">PDF</h2><button class="x" data-close>✕</button></div>
+  <div class="dlg-bar"><span id="pdfInfo" class="muted small">Preparando el PDF…</span>
+    <label class="inline small">Orientación <select id="pdfOrient"><option value="p">Vertical</option><option value="l">Horizontal</option></select></label></div>
+  <div id="pdfPages" class="scrollarea pdfpages"></div>
+  <div class="dlg-bar endbar"><button id="pdfPrint">🖨 Imprimir</button><button id="pdfShare" hidden>Compartir</button><button id="pdfDl" class="primary" disabled>⤓ Descargar PDF</button></div>
+</dialog>
+
+<div id="printArea" class="printarea prt"></div>
+
+<script src="js/db.js"></script>
+<script src="js/drills.js"></script>
+<script src="js/method.js"></script>
+<script src="js/objects.js"></script>
+<script src="js/zones.js"></script>
+<script src="js/tactics.js"></script>
+<script src="js/importer.js"></script>
+<script src="js/video.js"></script>
+<script src="js/app.js"></script>
+<script src="js/session.js"></script>
+<script src="js/plan.js"></script>
+<script src="js/squad.js"></script>
+<script src="js/care.js"></script>
+<script src="js/matches.js"></script>
+<script src="js/perf.js"></script>
+<script src="js/home.js"></script>
+<script src="js/pdf.js"></script>
+<script src="js/exlib.js"></script>
+<script src="js/brand.js"></script>
+<script src="js/android.js"></script>
+</body>
+</html>
