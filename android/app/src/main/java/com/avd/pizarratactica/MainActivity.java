@@ -111,8 +111,29 @@ public class MainActivity extends Activity {
             }
 
             @Override
+            public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse response) {
+                // La web todavía no está publicada o GitHub Pages devolvió un error: pantalla propia con «Reintentar»
+                if (request.isForMainFrame() && response.getStatusCode() >= 400) {
+                    String html = OFFLINE_HTML.replace("Sin conexión", "La Pizarra no está disponible (" + response.getStatusCode() + ")")
+                            .replace("La primera vez la app necesita internet para descargar la Pizarra.<br>Después funciona también sin conexión.",
+                                    "La web todavía se está publicando o no se encontró.<br>Espera un par de minutos y vuelve a intentarlo.");
+                    view.loadDataWithBaseURL(null, html, "text/html", "utf-8", null);
+                }
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                if (url != null && url.startsWith("http")) view.getSettings().setCacheMode(WebSettings.LOAD_DEFAULT);
+            }
+
+            @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                if ("pizarra".equals(request.getUrl().getScheme())) { view.loadUrl(START_URL); return true; }
+                if ("pizarra".equals(request.getUrl().getScheme())) {
+                    // Reintentar sin usar la copia guardada (por si guardó una página de error)
+                    view.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
+                    view.loadUrl(START_URL);
+                    return true;
+                }
                 Uri u = request.getUrl();
                 if ("appassets.androidplatform.net".equals(u.getHost()) || (HOME_HOST != null && HOME_HOST.equals(u.getHost()))) return false;
                 // Enlaces externos (YouTube, Vimeo, páginas web): en el navegador del teléfono
