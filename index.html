@@ -108,6 +108,7 @@
     <div class="hm-brand"><img class="lg" src="icons/logo-dt.png" alt="AVD D.T Fútbol"><div><h1>Pizarra Táctica</h1><span class="sl">D.T Fútbol · Planificación y entrenamiento</span><span id="hmDate"></span></div></div>
     <div id="hmTeam" class="hm-team"></div>
     <label class="hm-cat" title="Equipo o categoría activa: filtra plantel, sesiones, partidos y estadísticas">Equipo <select id="activeCat"></select></label>
+    <button id="hmSync" class="sychip" hidden title="Estado de la sincronización"></button>
     <button id="hmBoard" class="primary">Ir a la pizarra →</button>
     <button class="thb" title="Cambiar tema" aria-label="Cambiar tema"></button>
   </header>
@@ -237,6 +238,23 @@
     <label>Tema de la app
       <select id="setTheme"><option value="auto">Automático (según el dispositivo)</option><option value="claro">Claro</option><option value="oscuro">Oscuro</option></select>
     </label>
+    <h3>Sincronización entre dispositivos</h3>
+    <div id="syncBox" class="sybox">
+      <p id="syState" class="systate"></p>
+      <p id="syNoCfg" class="muted small">Todavía no está conectada la nube (Firebase). Mientras tanto, los datos se guardan solo en este dispositivo.</p>
+      <div id="syOut" hidden>
+        <p class="muted small">Usa la misma cuenta en el celular y en la computadora: los datos se sincronizan solos en los dos.</p>
+        <label>Correo <input id="syEmail" type="email" autocomplete="email" inputmode="email"></label>
+        <label>Contraseña <input id="syPass" type="password" autocomplete="current-password" minlength="6"></label>
+        <div class="row"><button id="syLogin" class="primary">Entrar</button><button id="syCreate">Crear cuenta</button><button id="syForgot">Olvidé la contraseña</button></div>
+      </div>
+      <div id="syIn" hidden>
+        <p>Conectado como <b id="syWho"></b></p>
+        <div class="row"><button id="syNow">↻ Sincronizar ahora</button><button id="syLogout">Cerrar sesión</button></div>
+      </div>
+      <p id="sySkip" class="muted small" hidden></p>
+      <p class="muted small">Se sincroniza todo (tácticas, sesiones, planes, plantel, partidos, carga y bienestar) menos los videos e imágenes de la videoteca, que se quedan en cada dispositivo.</p>
+    </div>
     <h3>Datos y copia de seguridad</h3>
     <div class="row"><button id="bkOpen">🗄 Copia de seguridad y restauración</button><button id="tourOpen">🧭 Guía de inicio</button></div>
     <label>Equipo / categoría activa <select id="setActiveCat"></select></label>
@@ -862,6 +880,8 @@
 <div id="printArea" class="printarea prt"></div>
 
 <script src="js/db.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/sync.js"></script>
 <script src="js/drills.js"></script>
 <script src="js/method.js"></script>
 <script src="js/objects.js"></script>

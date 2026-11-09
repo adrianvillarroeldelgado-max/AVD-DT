@@ -712,3 +712,13 @@ body.presenting .matchmode{display:none}
 @media (max-width:560px){.exlbl{min-width:100%}}
 .exfilters input[type=checkbox]{width:auto}.exfilters label.chk{align-self:center}
 #dlgMatch section[hidden],#dlgPerf section[hidden]{display:none!important}
+/* --- v12: sincronización --- */
+.sybox{display:flex;flex-direction:column;gap:8px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.sybox p{margin:0}
+.systate{font-weight:700}
+.systate::before{content:'';display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;background:var(--muted);vertical-align:middle}
+.sy-ok::before{background:#2F8F5B}.sy-wait::before{background:#F2B705}.sy-err::before{background:#C62828}.sy-off::before{background:var(--muted)}
+.sychip{font-size:12.5px;padding:6px 10px;border-radius:999px;white-space:nowrap}
+.sychip.sy-ok{border-color:#2F8F5B;color:var(--ok)}.sychip.sy-err{border-color:#C62828;color:var(--danger)}.sychip.sy-wait{border-color:#F2B705}
+@media (max-width:560px){.sychip{order:5}}
+.sybox input{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text);font:inherit}
