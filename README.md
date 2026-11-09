@@ -2,10 +2,10 @@
 
 Pizarra táctica, planificación, plantel, partidos y carga para entrenadores de fútbol (AVD · D.T Fútbol).
 
-- **Web (raíz del repositorio)**: se publica con GitHub Pages en <https://adrianvillarroeldelgado-max.github.io/avd-dt/>. Funciona sin conexión y se instala como PWA.
+- **Web (raíz del repositorio)**: se publica con GitHub Pages en <https://adrianvillarroeldelgado-max.github.io/AVD-DT/>. Funciona sin conexión y se instala como PWA.
 - **App de Android (`android/`)**: abre esa web, así que cada cambio que subas a la web llega a la app sin reinstalar. GitHub Actions compila el APK y el AAB y los publica en **Releases**.
-- **Descargar la app**: <https://github.com/adrianvillarroeldelgado-max/avd-dt/releases/latest/download/PizarraDTFutbol.apk>
-- **Política de privacidad**: <https://adrianvillarroeldelgado-max.github.io/avd-dt/privacidad.html>
+- **Descargar la app**: <https://github.com/adrianvillarroeldelgado-max/AVD-DT/releases/latest/download/PizarraDTFutbol.apk>
+- **Política de privacidad**: <https://adrianvillarroeldelgado-max.github.io/AVD-DT/privacidad.html>
 
 ## Actualizar
 

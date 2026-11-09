@@ -6,7 +6,7 @@ plugins {
 def buildNumber = (System.getenv('GITHUB_RUN_NUMBER') ?: '1').toInteger()
 def keystoreFile = file('release.keystore')
 // Dirección de la web publicada en GitHub Pages (se puede cambiar con la variable WEB_URL del repositorio).
-def webUrl = (System.getenv('WEB_URL') ?: '').trim() ?: 'https://adrianvillarroeldelgado-max.github.io/avd-dt/'
+def webUrl = (System.getenv('WEB_URL') ?: '').trim() ?: 'https://adrianvillarroeldelgado-max.github.io/AVD-DT/'
 
 android {
     namespace 'com.avd.pizarratactica'

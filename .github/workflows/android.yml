@@ -1,7 +1,7 @@
 name: Compilar app Android
 
 # Solo hace falta compilar cuando cambia la app nativa (carpeta android) o a mano.
-# Los cambios de la web llegan solos a la app: abre https://adrianvillarroeldelgado-max.github.io/avd-dt/
+# Los cambios de la web llegan solos a la app: abre https://adrianvillarroeldelgado-max.github.io/AVD-DT/
 on:
   push:
     branches: [ main ]
